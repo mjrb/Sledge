@@ -1,30 +1,39 @@
 (function () {
 "use strict";
 
-var e = React.createElement;
+// TODO: Get actual judge id
+var myJudgeId = 1;
 
 var judge = {};
 window.judge = judge;
 
 function init() {
-    sledge.init();
+    // TODO: Get Actual Token
+    sledge.init({token: "test"});
 
     var appContainer = document.getElementById("app");
-    ReactDOM.render(e(JudgeApp, null), appContainer);
+    ReactDOM.render(
+        React.createElement(
+            JudgeAppWrapper, null), appContainer);
 }
 judge.init = init;
 window.addEventListener("load", init);
 
-////////////////////
-// Toplevel Judge Component
-
-class JudgeApp extends React.Component {
-    constructor(props) {
-        super(props);
-
-        sledge.subscribe(data => {
-            if ( !data.trans && sledge.isInitialized() )
-                this.updateSledgeData();
+function getSledgeData() {
+    if (sledge.isInitialized()) {
+        let hacks = sledge.getAllHacks();
+        let judgeInfo = sledge.getJudgeInfo({
+            judgeId: myJudgeId
+        });
+        let orderInfo = sledge.getHacksOrder({
+            judgeId: myJudgeId
+        });
+        let superlatives = sledge.getSuperlatives();
+        let chosenSuperlatives = sledge.getChosenSuperlatives({
+            judgeId: myJudgeId
+        });
+        let ratings = sledge.getJudgeRatings({
+            judgeId: myJudgeId
         });
 
         this.state = {
@@ -76,6 +85,7 @@ class JudgeApp extends React.Component {
             };
         });
     }
+}
 
     calcSuperlatives() {
         return this.state.superlatives.map( s => ({
@@ -166,9 +176,8 @@ class JudgeApp extends React.Component {
         );
     }
 
-    renderLoading() {
-        return e("div", null,
-            e("span", null, "Connecting to Sledge..."));
+    componentDidMount() {
+        sledge.subscribe(this.onUpdate.bind(this));
     }
 
     render() {
@@ -182,19 +191,15 @@ class JudgeApp extends React.Component {
         }
     }
 
-    getCurrentHack() {
-        if ( this.state.currentHackPos < 0 ) {
-            return {
-                id: 0,
-                name: "[No Hacks Found]",
-                description: "[No Hacks Found]",
-                location: "?",
-            }
+    render() {
+        if (this.state.sledge.initialized) {
+            return React.createElement(
+                    judge.JudgeApp, this.state.sledge);
         } else {
-            return this.state.judgeHacks[this.state.currentHackPos];
+            return React.createElement(
+                    "span", null, "Loading...");
         }
     }
 }
-window.judge.JudgeApp = JudgeApp;
 
 })();

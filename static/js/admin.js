@@ -3,7 +3,7 @@
 
 var log, cmd;
 var lastCmd = "";
-
+var sledge=window.sledge;
 function printLn(txt="") {
     let timestr = (new Date()).toLocaleString();
     let logstr = "[" + timestr  + "] " + txt + "\n";
@@ -35,6 +35,17 @@ function runCommand(txt) {
 
     if ( action === "" ) {
         return;
+    } else if ( action === "help" ) {
+        printLn(" === Help ===");
+        printLn("Commands are listed below. Running a command without");
+        printLn("any arguments displays its usage.");
+        printLn(" send - Send a raw socketio request");
+        printLn(" devpost - Scrape devpost for hacks");
+        printLn(" addjudge - Add a judge");
+        printLn(" addsuperlative - Add a superlative");
+        printLn(" addtoken - Manually add an auth token (usually done automatically on signin)");
+        printLn(" token - View and set your token (must refresh see changes)");
+        printLn();
     } else if ( action === "send" ) {
         if ( !args[1] || !args[2] ) {
             printLn("usage: send <socketio event> <json>");
@@ -66,12 +77,40 @@ function runCommand(txt) {
         addJudge(args[1], args[2]);
     } else if ( action === "addsuperlative" ) {
         if ( args.length !== 2 ) {
-            printLn("usafe: addsuperlative <name>");
+            printLn("usage: addsuperlative <name>");
             printLn();
             return;
         }
 
         addSuperlative(args[1]);
+    } else if ( action === "addtoken" ) {
+        if ( args.length !== 3 ) {
+            printLn("usage: addtoken <judge id> <secret>");
+            printLn();
+            return;
+        }
+
+        addToken(args[1], args[2]);
+    } else if ( action === "token" ) {
+        if ( args.length === 2 && args[1] === "view" ) {
+            printLn(" === View Token ===");
+            printWrap("Your Current Token: ", localStorage.getItem("token"));
+            printLn();
+        } else if ( args.length === 3 && args[1] === "set" ) {
+            printLn(" === Set Token ===");
+            printWrap("Your Current Token: ", localStorage.getItem("token"));
+            localStorage.setItem("token", args[2]);
+            printWrap("Your New Token: ", localStorage.getItem("token"));
+            printLn("(Hint: Refresh to take effect)");
+            printLn();
+        } else {
+            printLn("usage: token view");
+            printLn("       token set <new token>");
+            printLn();
+            return;
+        }
+    } else if ( action === "clear" ) {
+        log.value = "";
     } else {
         printWrap("Unknown command: ", action);
     }
@@ -151,11 +190,17 @@ function init() {
         }
     });
 
-    sledge.init();
+    if ( !localStorage.getItem("token") ) {
+        localStorage.setItem("token", "test");
+    }
+
+    sledge.init({
+        token: localStorage.getItem("token")
+    });
     sledge.subscribe( onSledgeEvent );
 
     printLn("Admin Console Ready");
-    printLn(" All events will be logged here. See admin.js for commands.");
+    printLn(" All events will be logged here. Type help for commands.");
     printLn();
 }
 window.addEventListener("load", init);
@@ -170,7 +215,7 @@ function scrapeDevpost(url) {
     printLn("         In the meantime, the server will be unresponsive.");
     printLn();
 
-    sledge.scrapeDevpost(url);
+    sledge.sendScrapeDevpost(url);
 }
 
 function addJudge(name, email) {
@@ -179,7 +224,7 @@ function addJudge(name, email) {
     printWrap("Email: ", email);
     printLn();
 
-    sledge.addJudge(name, email);
+    sledge.SendAddJudge(name, email);
 }
 
 function addSuperlative(name) {
@@ -187,7 +232,15 @@ function addSuperlative(name) {
     printWrap("Name: ", name);
     printLn();
 
-    sledge.addSuperlative(name);
+    sledge.sendAddSuperlative(name);
+}
+
+function addToken(judgeId, secret) {
+    printLn(" === Add Token ===");
+    printWrap("judgeId: ", judgeId);
+    printWrap("secret: ", secret);
+
+    sledge.sendAddToken(judgeId, secret);
 }
 
 window.admin = {
