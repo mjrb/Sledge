@@ -3,7 +3,7 @@
 
 var log, cmd;
 var lastCmd = "";
-
+var sledge=window.sledge;
 function printLn(txt="") {
     let timestr = (new Date()).toLocaleString();
     let logstr = "[" + timestr  + "] " + txt + "\n";
@@ -215,7 +215,7 @@ function scrapeDevpost(url) {
     printLn("         In the meantime, the server will be unresponsive.");
     printLn();
 
-    sledge.scrapeDevpost(url);
+    sledge.sendScrapeDevpost(url);
 }
 
 function addJudge(name, email) {
@@ -224,7 +224,7 @@ function addJudge(name, email) {
     printWrap("Email: ", email);
     printLn();
 
-    sledge.addJudge(name, email);
+    sledge.SendAddJudge(name, email);
 }
 
 function addSuperlative(name) {
@@ -232,7 +232,7 @@ function addSuperlative(name) {
     printWrap("Name: ", name);
     printLn();
 
-    sledge.addSuperlative(name);
+    sledge.sendAddSuperlative(name);
 }
 
 function addToken(judgeId, secret) {
@@ -240,7 +240,7 @@ function addToken(judgeId, secret) {
     printWrap("judgeId: ", judgeId);
     printWrap("secret: ", secret);
 
-    sledge.addToken(judgeId, secret);
+    sledge.sendAddToken(judgeId, secret);
 }
 
 window.admin = {
