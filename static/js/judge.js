@@ -29,7 +29,7 @@ class JudgeApp extends React.Component {
 
         this.state = {
             initialized: false,
-
+	    listViewActive: false,
             judgeHacks: [],
             ratings: [],
             currentHackPos: -1,
@@ -46,7 +46,9 @@ class JudgeApp extends React.Component {
         if ( sledge.isInitialized() )
             this.updateSledgeData();
     }
-
+    switchView() {
+	this.setState({listViewActive:!this.state.listViewActive});
+    }
     updateSledgeData() {
         this.setState( (prevState, props) => {
             let hacks = sledge.getHacksTable();
@@ -83,7 +85,38 @@ class JudgeApp extends React.Component {
             chosenSecondId: this.state.chosenSuperlatives[s.id].second
         }));
     }
-
+    listView(){
+        let hacks = sledge.getHacksTable();
+	let names = hacks.map((hack)=>hack.name);
+	console.log(names)
+        return e("div", { className: "container d-flex judge-container" },
+            e(judge.Toolbar, {
+                onPrev: () => {
+                    this.setState( (prevState, props) => {
+                        if ( prevState.currentHackPos-1 >= 0 )
+                            return { currentHackPos: prevState.currentHackPos-1 };
+                        else
+                            return {};
+                    });
+                },
+                onList: this.switchView.bind(this),
+                onNext: () => {
+                    this.setState( (prevState, props) => {
+                        if ( prevState.currentHackPos+1 < prevState.judgeHacks.length )
+                            return { currentHackPos: prevState.currentHackPos+1 };
+                        else
+                            return {};
+                    });
+                },
+            }),
+            e(judge.JudgeInfo, {
+                name: this.state.judge.name
+            }),
+            e(judge.ProjectList, {
+		projects:[{pname:"proj1"},{pname:"proj2"}]
+	    })
+        );
+    }
     renderReady() {
         let currentHack = this.getCurrentHack();
 
@@ -97,7 +130,7 @@ class JudgeApp extends React.Component {
                             return {};
                     });
                 },
-                onList: () => {},
+                onList: this.switchView.bind(this),
                 onNext: () => {
                     this.setState( (prevState, props) => {
                         if ( prevState.currentHackPos+1 < prevState.judgeHacks.length )
@@ -139,7 +172,10 @@ class JudgeApp extends React.Component {
     }
 
     render() {
-        if (this.state.initialized) {
+	if (this.state.initialized) {
+	    if(this.state.listViewActive) {
+		return this.listView();
+	    }
             return this.renderReady();
         } else {
             return this.renderLoading();
