@@ -109,6 +109,9 @@ addTransientResponse("add-superlative-response");
 function sendAddToken({judgeId, secret}) {
     socket.emit("add-token", {judgeId, secret});
 }
+function sendRaw({eventName, json}) {
+    socket.emit(eventName, json);
+}
 addTransientResponse("add-token-response");
 
 function sendRankSuperlative(data) {
